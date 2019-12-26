@@ -1,9 +1,9 @@
 const express = require('express');
 const database = require('../Database/database')
-const survey = express.Router();
+const room = express.Router();
 
 
-survey.get('/', (req, res, next) => {
+room.get('/', (req, res, next) => {
     var message = {}
     database.connection.getConnection((err, connection) => {
         if (err) {
@@ -31,51 +31,29 @@ survey.get('/', (req, res, next) => {
         }
     });
 });
-survey.post('/create', (req, res, next) => {
+room.post('/create', (req, res, next) => {
                 var message = {};
-                var content = req.body.content;
-                var id_student = req.body.id_student;
-                var id_class = req.body.id_class;
-                console.log(content, id_student, id_class)
+                var name = req.body.name;
+                var numberSeats = req.body.numberSeats;
+                console.log(name, numberSeats )
                 database.connection.getConnection((err, connection) => {
                         if(err){
                             message['error'] = true;
                             message['data'] = 'Internal Server Error';
                             res.status(500).json(message);
                         }else{
-                            var insert = "INSERT INTO Survey (Content) VALUES (?)";
-                            connection.query(insert, [JSON.stringify(content)], (err, rows) =>{
+                            var insert = "INSERT INTO Room (name, numberSeats) VALUES (?)";
+                            var room = []
+                            room.push(name, numberSeats)
+                            connection.query(insert, [room], (err, rows) =>{
                                 if(err){
                                     message['error'] = true;
-                                    message['data'] = "Insert survey fail!";
+                                    message['data'] = "Insert room fail!";
                                     console.log(err);
                                     res.status(400).json(message);
                                 }else{
-                                    var surveyId = rows.insertId;
-                                    var student_survey = [];
-                                    var class_survey = [];
-                                    student_survey.push(id_student, surveyId);
-                                    class_survey.push(id_class, surveyId);
-                                    connection.query("INSERT INTO Student_Survey (StudentId, SurveyId) VALUES (?)", [student_survey], (err, result1) => {
-                                        if(err){
-                                            message['error'] = true;
-                                            message['data'] = "Insert student_survey fail";
-                                            res.status(400).json(message);
-                                        }else{
-                                            console.log("Insert student_survey success", result1);
-                                        }
-                                    });
-                                    connection.query("INSERT INTO Class_Survey (ClassId, SurveyId) VALUES (?)", [class_survey], (err, result2) => {
-                                        if(err){
-                                            message['error'] = true;
-                                            message['data'] = "Insert class_survey fail";
-                                            res.status(400).json(message);
-                                        }else{
-                                            console.log("Insert class_survey success", result2);
-                                        }
-                                    });
                                     message['error'] = false;
-                                    message['data'] = "Insert survey success";
+                                    message['data'] = "Insert rooom success";
                                     res.status(200).json(message);
                                 }
                             });
@@ -85,4 +63,4 @@ survey.post('/create', (req, res, next) => {
             });
 
 
-module.exports = survey;
+module.exports = room;

@@ -10,7 +10,7 @@ student.get('/', (req, res, next) => {
             message['data'] = 'Internal Server Error';
             res.status(500).json(message);
         }else{
-            connection.query('select * from Students', (err, rows, feilds) => {
+            connection.query('SELECT * from Students', (err, rows, feilds) => {
                 console.log(rows);
                 if (err) {
                     message['error'] = true;
@@ -41,7 +41,7 @@ student.get('/:studentId', (req, res, next) => {
             res.status(500).json(message);
         }else{
             // var sql = 'select c.Subject from classes from Classes C left join StudentClasses SC on C.Id = SC.ClassId where SC.studentId = ?' + connection.escape(Id)
-            connection.query('select * from Students where studentID = ?',[Id] ,(err, rows, feilds) => {
+            connection.query('SELECT * from Students where studentID = ?',[Id] ,(err, rows, feilds) => {
                 console.log(rows);
                 if (err) {
                     message['error'] = true;

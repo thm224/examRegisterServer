@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({extended : false}));
 app.use(bodyParser.json());
 
 app.use('/students', student);
-app.use('/subjevts', subject);
+app.use('/subjects', subject);
 app.use('/room', room);
 app.use('/subject', subject);
 app.use('/student', student);

@@ -9,16 +9,16 @@ var token;
 
 user.post('/login', (req, res) => {
     var message = {}
-    var email = req.body.email;
+    var userName = req.body.userName;
     var password = req.body.password;
-    console.log(req.body);
+    console.log(userName);
     database.connection.getConnection((err, connection) => {
         if(err){
             message['error'] = true;
             message['data'] = 'Internal Server Error';
             res.status(500).json(message);
         } else {
-            connection.query('select * from Users where userName = ?',[email],
+            connection.query('select * from Users where userName = ?',[userName],
             (err, rows, fields) => {
                 console.log(rows, JSON.stringify(rows));
                 if(err){
@@ -33,8 +33,8 @@ user.post('/login', (req, res) => {
                         if(rows[0].password == password){
                             token = jwt.sign(
                                 {
-                                    email: rows[0].email,
-                                    password: rows[0].password
+                                    email: rows[0].userName,
+                                    password: rows[0].passWord
                                 }, 
                                 process.env.SECRET_KEY, 
                                 {
@@ -43,19 +43,19 @@ user.post('/login', (req, res) => {
                             message.error = false;
                             message['token'] = token;
                             message['expiresIn'] = '4h';
-                            message['_id'] = rows[0].Id;
+                            message['_id'] = rows[0].userID;
                             message['role'] = rows[0].role;
                             res.status(200).json(message);
                         }
                         else{
                             message.error = true;
-                            message['data'] = 'Email and Password does not match';
+                            message['data'] = 'UserName and Password does not match';
                             res.status(400).json(message);
                         }
                     }
                     else{
                         message.error = 1;
-                        message['data'] = 'Email does not exist!';
+                        message['data'] = 'UserName does not exist!';
                         res.status(400).json(message);
                         console.log('fail!');
                     }

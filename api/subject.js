@@ -11,7 +11,7 @@ subject.get('/', (req, res, next) => {
             message['data'] = 'Internal Server Error';
             res.status(500).json(message);
         }else{
-            connection.query('select * from Lecturers', (err, rows, feilds) => {
+            connection.query('select * from Subjects', (err, rows, feilds) => {
                 console.log(rows);
                 if (err) {
                     message['error'] = true;
@@ -41,7 +41,37 @@ subject.get('/:studentID', (req, res, next) => {
             message['data'] = 'Internal Server Error';
             res.status(500).json(message);
         }else{
-            connection.query('select s.name from Subjects s join Student_Subject ss on s.subjectID = ss.subjectID where ss.studentId = ?',[Id] ,(err, rows, feilds) => {
+            connection.query('select * from Subjects s join Student_Subject ss on s.subjectID = ss.subjectID where ss.studentId = ?',[Id] ,(err, rows, feilds) => {
+                console.log(rows);
+                if (err) {
+                    message['error'] = true;
+                    message['data'] = 'Error Ocured!';
+                    res.status(400).json(message);
+                }else{
+                    if (rows.lenght > 0){
+                        message = JSON.stringify(rows);
+                        res.status(200).json(message);
+                    }else{
+                        message['data'] = 'Empty';
+                        res.json(message) ;
+                    }
+                }
+            });
+            connection.release();
+        }
+    });
+}); 
+
+subject.post('/:create', (req, res, next) => {
+    var Id = req.params.studentID;
+    var message = {};
+    database.connection.getConnection((err, connection) => {
+        if(err){
+            message['error'] = true;
+            message['data'] = 'Internal Server Error';
+            res.status(500).json(message);
+        }else{
+            connection.query('select * from Subjects s join Student_Subject ss on s.subjectID = ss.subjectID where ss.studentId = ?',[Id] ,(err, rows, feilds) => {
                 console.log(rows);
                 if (err) {
                     message['error'] = true;
@@ -86,7 +116,7 @@ var upload = multer({ //multer settings
             }).single('file');
 
 
-subject.post('/create', (req, res, next) => {
+subject.post('/upload_students', (req, res, next) => {
     var exceltojson;
         upload(req,res,function(err){
             if(err){
@@ -106,94 +136,37 @@ subject.post('/create', (req, res, next) => {
                 exceltojson({
                     input: req.file.path,
                     output: null, //since we don't need output.json
-                    lowerCaseHeaders:true
                 }, function(err,result){
                     if(err) {
                         return res.json({error_code:1,err_desc:err, data: null});
                     } 
                     var values = [];
+                    var subjectCode = result[0].subjectCode;
                     for(var i = 0; i < result.length; i++)
-                        if (result[i].username != ''){
-                            var code = parseInt(Math.random().toString().slice(2,11));
-                            console.log(code);
-                            values.push([result[i].username, result[i].password, result[i].phone, code, result[i].vnumail, result[i].role, result[i].name]);
+                        if (result[i].studentCode != ''){
+                            values.push([subjectCode, result[i].studentCode, result[i].can_join_exam]);
                         }
                         else break;
                     var message = {};
                     console.log(values)
                     database.connection.getConnection((err, connection) => {
                         if(err){
+                            console.log(err)
                             message['error'] = true;
                             message['data'] = 'Internal Server Error';
                             res.status(500).json(message);
-                        }else{
-                            var Id;
-                            var userNames = [];
-                            var checkSql = "SELECT userName from Users";
-                            connection.query(checkSql, (err, rowss) => {
+                        }else{                        
+                            var sql = "INSERT INTO Student_Subject (subjectCode, studentCode, can_join_exam) VALUES (?)";
+                            connection.query(sql, values, (err, rowss) => {
                                 if(err){
+                                    console.log(err)
                                     message['error'] = true;
                                     message['data'] = 'error occur!';
                                     return res.status(400).json(message);
                                 }else{
-                                    console.log(rowss);
-                                    userNames = rowss;
-                                    for (var i = 0; i < values.length; i++){
-                                        let account = values[i];
-                                        var lecturer = [];
-                                        lecturer.push(account[0], account[1], account[5])
-                                        console.log(lecturer);
-                                        var checkIfExist = false;
-                                        console.log(userNames);
-                                        for(var j = 0; j < userNames.length; j++){
-                                            console.log(userNames[i].userName, lecturer[0])
-                                            if(userNames[j].userName == lecturer[0]){
-                                                    checkIfExist = true;
-                                                    break;
-                                                }else continue;
-                                            }
-                                        console.log(checkIfExist);
-                                        if(checkIfExist == true){
-                                            console.log('UserName is already exist!');
-                                            break;
-                                        }else{
-                                            var sql = "INSERT INTO Users (userName, password, role) VALUES (?)"
-                                            connection.query(sql,[lecturer] ,(err, rows) => {
-                                                 console.log(rows.affectedRows);
-                                                if (err) {
-                                                    message['error'] = true;
-                                                    message['data'] = 'Insert users fail!';
-                                                    return res.status(400).json(message);
-                                                }else{
-                                                    Id = rows.insertId;
-                                                    var lecturer1 = [];
-                                                    lecturer1.push(Id, account[5], account[4], account[3], account[2], account[6]);
-                                                    console.log(Id);
-                                                    var insert = "INSERT INTO Lecturers (Id_Lecturers, Role, Vnumail, Code, Phone, Name) VALUES (?)";
-                                                    connection.query(insert,[lecturer1] ,(err, row) => {
-                                                        console.log(Id, '1');
-                                                        if(err) {
-                                                            message['error'] = true;
-                                                            message['data'] = 'Insert lecturers fail!';
-                                                            return res.status(400).json(message);
-                                                        }else{
-                                                            console.log("Insert lecturers success!");
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        }
-                                }
-                                    if(checkIfExist == false){
-                                        console.log(checkIfExist);
-                                        message['error'] = false;
-                                        message['data'] = 'Insert lecturers success!';
-                                        res.status(200).json(message);
-                                    }else{
-                                        message['error'] = true;
-                                        message['data'] = "UserName is already exist!";
-                                        res.status(400).json(message);
-                                    }
+                                    message['error'] = false;
+                                    message['data'] = "Upload success";
+                                    res.status(200).json(message);
                                     connection.release();
                                 }
                             });
