@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 25, 2019 at 12:41 PM
+-- Generation Time: Dec 26, 2019 at 04:36 PM
 -- Server version: 5.7.28-0ubuntu0.18.04.4
 -- PHP Version: 7.2.24-0ubuntu0.18.04.1
 
@@ -89,6 +89,13 @@ CREATE TABLE `Room` (
   `numberSeats` int(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_vietnamese_ci;
 
+--
+-- Dumping data for table `Room`
+--
+
+INSERT INTO `Room` (`roomID`, `name`, `numberSeats`) VALUES
+(1, '303-G3', 40);
+
 -- --------------------------------------------------------
 
 --
@@ -110,13 +117,7 @@ CREATE TABLE `Students` (
 
 INSERT INTO `Students` (`studentID`, `code`, `name`, `vnumail`, `dateOfBirth`, `gender`) VALUES
 (1, 16020055, 'Trần Hoàng Minh', '16020055@vnu.edu.vn', '', ''),
-(2, 16020033, 'Nguyễn văn', '16020055@vnu.edu.vn', '', ''),
-(3, 16020013, 'Nguyễn văn', '16020055@vnu.edu.vn', '', ''),
-(5, 16020055, 'Trần Hoàng Minh', '16020055@vnu.edu.vn', '', ''),
-(6, 16020055, 'Trần Hoàng Minh', '16020055@vnu.edu.vn', '', ''),
-(7, 16020055, 'Trần Hoàng Minh', '16020055@vnu.edu.vn', '', ''),
-(8, 16020055, 'Trần Hoàng Minh', '16020055@vnu.edu.vn', '', ''),
-(9, 16020055, 'Trần Hoàng Minh', '16020055@vnu.edu.vn', '', '');
+(2, 16020033, 'Nguyễn văn', '16020055@vnu.edu.vn', '', '');
 
 -- --------------------------------------------------------
 
@@ -137,10 +138,17 @@ CREATE TABLE `Student_ExamSchedule` (
 --
 
 CREATE TABLE `Student_Subject` (
-  `studentID` int(20) NOT NULL,
-  `subjectID` int(20) NOT NULL,
+  `studentCode` int(20) NOT NULL,
+  `subjectCode` varchar(30) COLLATE utf8_vietnamese_ci NOT NULL,
   `can_join_exam` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_vietnamese_ci;
+
+--
+-- Dumping data for table `Student_Subject`
+--
+
+INSERT INTO `Student_Subject` (`studentCode`, `subjectCode`, `can_join_exam`) VALUES
+(16020055, 'INT2203 4', 1);
 
 -- --------------------------------------------------------
 
@@ -242,7 +250,8 @@ ALTER TABLE `Room`
 -- Indexes for table `Students`
 --
 ALTER TABLE `Students`
-  ADD PRIMARY KEY (`studentID`);
+  ADD PRIMARY KEY (`studentID`),
+  ADD UNIQUE KEY `code` (`code`);
 
 --
 -- Indexes for table `Student_ExamSchedule`
@@ -257,14 +266,15 @@ ALTER TABLE `Student_ExamSchedule`
 -- Indexes for table `Student_Subject`
 --
 ALTER TABLE `Student_Subject`
-  ADD KEY `studentID` (`studentID`),
-  ADD KEY `subjectID` (`subjectID`);
+  ADD KEY `studentID` (`studentCode`),
+  ADD KEY `subjectID` (`subjectCode`);
 
 --
 -- Indexes for table `Subjects`
 --
 ALTER TABLE `Subjects`
-  ADD PRIMARY KEY (`subjectID`);
+  ADD PRIMARY KEY (`subjectID`),
+  ADD UNIQUE KEY `code` (`code`);
 
 --
 -- Indexes for table `Subject_ExamSchedule`
@@ -304,7 +314,7 @@ ALTER TABLE `Exam_Schedule`
 -- AUTO_INCREMENT for table `Room`
 --
 ALTER TABLE `Room`
-  MODIFY `roomID` int(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `roomID` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 --
 -- AUTO_INCREMENT for table `Students`
 --
@@ -355,8 +365,8 @@ ALTER TABLE `Student_ExamSchedule`
 -- Constraints for table `Student_Subject`
 --
 ALTER TABLE `Student_Subject`
-  ADD CONSTRAINT `Student_Subject_ibfk_1` FOREIGN KEY (`studentID`) REFERENCES `Students` (`studentID`),
-  ADD CONSTRAINT `Student_Subject_ibfk_2` FOREIGN KEY (`subjectID`) REFERENCES `Subjects` (`subjectID`);
+  ADD CONSTRAINT `Student_Subject_ibfk_2` FOREIGN KEY (`subjectCode`) REFERENCES `Subjects` (`code`),
+  ADD CONSTRAINT `Student_Subject_ibfk_3` FOREIGN KEY (`studentCode`) REFERENCES `Students` (`code`);
 
 --
 -- Constraints for table `Subject_ExamSchedule`
