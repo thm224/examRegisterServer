@@ -1,9 +1,9 @@
-Egister-- phpMyAdmin SQL Dump
+-- phpMyAdmin SQL Dump
 -- version 4.6.6deb5
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 27, 2019 at 05:48 PM
+-- Generation Time: Dec 27, 2019 at 11:55 PM
 -- Server version: 5.7.28-0ubuntu0.18.04.4
 -- PHP Version: 7.2.24-0ubuntu0.18.04.1
 
@@ -135,8 +135,16 @@ INSERT INTO `Students` (`studentID`, `code`, `name`, `vnumail`, `dateOfBirth`, `
 CREATE TABLE `Student_ExamSchedule` (
   `studentID` int(20) NOT NULL,
   `esID` int(20) NOT NULL,
-  `roomID` int(20) NOT NULL
+  `roomID` int(20) NOT NULL,
+  `subjectID` int(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_vietnamese_ci;
+
+--
+-- Dumping data for table `Student_ExamSchedule`
+--
+
+INSERT INTO `Student_ExamSchedule` (`studentID`, `esID`, `roomID`, `subjectID`) VALUES
+(1, 1, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -155,7 +163,8 @@ CREATE TABLE `Student_Subject` (
 --
 
 INSERT INTO `Student_Subject` (`studentCode`, `subjectCode`, `can_join_exam`) VALUES
-(16020055, 'INT2203 4', 1);
+(16020055, 'INT2203 4', 1),
+(16020055, 'INT3306 10', 1);
 
 -- --------------------------------------------------------
 
