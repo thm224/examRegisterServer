@@ -104,11 +104,30 @@ student.get('/subjects/:studentId', (req, res, next) => {
                                         message['data'] = 'Error Ocured!';
                                         res.status(400).json(message);
                                     }else{
-                                        console.log("success");
-                                        message = JSON.stringify(subjects);
-                                        res.status(200).json(message);
+                                        connection.query("SELECT subjectID from Student_ExamSchedule where studentID = ?", [Id], (err, subjectIDs, feilds) => {
+                                            console.log(subjectIDs)
+                                            if(err){
+                                                message['error'] = true;
+                                                message['data'] = 'Error Ocured!';
+                                                res.status(400).json(message);
+                                            }else{
+                                                console.log("success");
+                                                // subjects = JSON.stringify(subjects);
+                                                for(var i = 0; i < subjects.length; i++){
+                                                    console.log(subjects[i])
+                                                    if(subjectIDs.includes(subjects[i].subjectID)){
+                                                        subjects[i]['isRegister'] = 1;
+                                                    }else{
+                                                        subjects[i]['isRegister'] = 1;
+                                                    }
+                                                }
+                                                console.log(subjects)
+                                                message = subjects;
+                                                res.status(200).json(message);
+                                            }
+                                        });
                                     }
-                                })
+                                });
                             }
                         })
                     }else{
@@ -149,6 +168,34 @@ student.get('/subject/:subjectID', (req, res, next) => {
     });
 }); 
 
+student.post('/register', (req, res, next) => {
+    var subjectID = req.body.subjectID;
+    var esID = req.body.esID;
+    var studentID = req.body.studentID;
+    console.log(subjectID, "a")
+    var message = {};
+    database.connection.getConnection((err, connection) => {
+        if(err){
+            message['error'] = true;
+            message['data'] = 'Internal Server Error';
+            res.status(500).json(message);
+        }else{
+            // var sql = 'select c.Subject from classes from Classes C left join StudentClasses SC on C.Id = SC.ClassId where SC.studentId = ?' + connection.escape(Id)
+            connection.query('SELECT * from Exam_Schedule where esID = ?',[esID] ,(err, rows, feilds) => {
+                console.log(rows ,rows.length);
+                if (err) {
+                    message['error'] = true;
+                    message['data'] = 'Error Ocured!';
+                    res.status(400).json(message);
+                }else{
+                    message = JSON.stringify(rows);
+                    res.status(200).json(message);
+                }
+            });
+            connection.release();
+        }
+    });
+}); 
 
 
 
