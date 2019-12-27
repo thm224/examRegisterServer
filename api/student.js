@@ -42,13 +42,13 @@ student.get('/:studentId', (req, res, next) => {
         }else{
             // var sql = 'select c.Subject from classes from Classes C left join StudentClasses SC on C.Id = SC.ClassId where SC.studentId = ?' + connection.escape(Id)
             connection.query('SELECT * from Students where studentID = ?',[Id] ,(err, rows, feilds) => {
-                console.log(rows);
+                console.log(rows[0],rows.length);
                 if (err) {
                     message['error'] = true;
                     message['data'] = 'Error Ocured!';
                     res.status(400).json(message);
                 }else{
-                    if (rows.lenght > 0){
+                    if (rows.length > 0){
                         message = JSON.stringify(rows);
                         res.status(200).json(message);
                     }else{
@@ -107,7 +107,7 @@ student.post('/create', (req, res, next) => {
                 exceltojson({
                     input: req.file.path,
                     output: null, //since we don't need output.json
-                    lowerCaseHeaders:true
+                    lowerCaseHeaders:false
                 }, function(err,result){
                     if(err) {
                         return res.json({error_code:1,err_desc:err, data: null});
@@ -115,7 +115,7 @@ student.post('/create', (req, res, next) => {
                     var values = [];
                     for(var i = 0; i < result.length; i++)
                         if (result[i].username != '')
-                            values.push([result[i].username, result[i].password, result[i].code, result[i].name, result[i].vnumail, result[i].role, result[i].courses]);
+                            values.push([result[i].username, result[i].password, result[i].code, result[i].name, result[i].vnumail, result[i].role, result[i].dateOfBirth, result[i].gender]);
                         else break;
                     var message = {};
                     console.log(values)
@@ -162,50 +162,18 @@ student.post('/create', (req, res, next) => {
                                                 }else{
                                                     Id = rows.insertId;
                                                     var student1 = [];
-                                                    student1.push(Id, account[2], account[3], account[4])
+                                                    student1.push(Id, account[2], account[3], account[4], account[6], account[7])
                                                     console.log(Id);
-                                                    var insert = "INSERT INTO Students (studentID, code, name, vnumail) VALUES (?)"
+                                                    var insert = "INSERT INTO Students (studentID, code, name, vnumail, dateOfBirth, gender) VALUES (?)"
                                                     connection.query(insert,[student1] ,(err, row) => {
                                                         console.log(Id, '1');
                                                         if(err) {
+                                                            console.log(err)
                                                             message['error'] = true;
                                                             message['data'] = 'Insert students fail!'
                                                             return res.status(400).json(message);
                                                         }else{
                                                             console.log("Insert students success!");
-                                                            courses = account[6];
-                                                            courses = courses.split(",");
-                                                            for(var k = 0; k < courses.length; k++){
-                                                                courses[k] = courses[k].trim();
-                                                            }
-                                                            console.log(courses)
-                                                            var findSubjectID = "SELECT subjectID from Subjects where code IN (?)"
-                                                            connection.query(findSubjectID, [courses], (err, listID) => {
-                                                                if(err){
-                                                                    message['error'] = true;
-                                                                    message['data'] = 'Insert studentSubject fail!'
-                                                                    return res.status(400).json(message);
-                                                                }else{
-                                                                    console.log("select subjectID success!")
-                                                                    console.log(listID)
-                                                                    listSS = []
-                                                                    for(var m = 0; m < listID.length; m ++){
-                                                                        listSS.push([Id, listID[m].subjectID, 1])
-                                                                    }
-                                                                    console.log(listSS)
-                                                                    var insertSS = "INSERT INTO Student_Subject (studentID, subjectID, can_join_exam) VALUES (?)"
-                                                                    connection.query(insertSS, listSS, (err, result) => {
-                                                                        if(err) {
-                                                                            message['error'] = true;
-                                                                            message['data'] = 'Insert students fail!';
-                                                                            console.log(err)
-                                                                            // return res.status(400).json(message);
-                                                                        }else{
-                                                                            console.log("Insert studentSubject success!")
-                                                                        }
-                                                                    })
-                                                                }
-                                                            })
                                                         }
                                                     });
                                                 }
@@ -232,6 +200,36 @@ student.post('/create', (req, res, next) => {
             }
         })
 });
+
+// subject.post('/create', (req, res, next) => {
+//     var Id = req.params.studentID;
+//     var message = {};
+//     database.connection.getConnection((err, connection) => {
+//         if(err){
+//             message['error'] = true;
+//             message['data'] = 'Internal Server Error';
+//             res.status(500).json(message);
+//         }else{
+//             connection.query('select * from Subjects s join Student_Subject ss on s.subjectID = ss.subjectID where ss.studentId = ?',[Id] ,(err, rows, feilds) => {
+//                 console.log(rows);
+//                 if (err) {
+//                     message['error'] = true;
+//                     message['data'] = 'Error Ocured!';
+//                     res.status(400).json(message);
+//                 }else{
+//                     if (rows.lenght > 0){
+//                         message = JSON.stringify(rows);
+//                         res.status(200).json(message);
+//                     }else{
+//                         message['data'] = 'Empty';
+//                         res.json(message) ;
+//                     }
+//                 }
+//             });
+//             connection.release();
+//         }
+//     });
+// }); 
 
 student.put('/', (req, res, next) => {
     var exceltojson;
