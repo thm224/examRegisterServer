@@ -50,6 +50,7 @@ student.get('/:studentId', (req, res, next) => {
                 }else{
                     if (rows.length > 0){
                         message = JSON.stringify(rows);
+                        console.log(rows[0].code)
                         res.status(200).json(message);
                     }else{
                         message['data'] = 'Empty';
@@ -61,6 +62,68 @@ student.get('/:studentId', (req, res, next) => {
         }
     });
 }); 
+
+student.get('/subjects/:studentId', (req, res, next) => {
+    var Id = req.params.studentId;
+    console.log(Id, "a")
+    var message = {};
+    database.connection.getConnection((err, connection) => {
+        if(err){
+            message['error'] = true;
+            message['data'] = 'Internal Server Error';
+            res.status(500).json(message);
+        }else{
+            // var sql = 'select c.Subject from classes from Classes C left join StudentClasses SC on C.Id = SC.ClassId where SC.studentId = ?' + connection.escape(Id)
+            connection.query('SELECT * from Students where studentID = ?',[Id] ,(err, rows, feilds) => {
+                console.log(rows[0] ,rows.length);
+                if (err) {
+                    message['error'] = true;
+                    message['data'] = 'Error Ocured!';
+                    res.status(400).json(message);
+                }else{
+                    if (rows.length > 0){
+                        message = JSON.stringify(rows);
+                        code = rows[0].code;
+                        sql = "SELECT subjectCode from Student_Subject where studentCode = ?";
+                        connection.query(sql, [code], (err, subjectCodes, feilds) => {
+                            console.log(subjectCodes);
+                            if(err){
+                                message['error'] = true;
+                                message['data'] = 'Error Ocured!';
+                                res.status(400).json(message);
+                            }else{
+                                codes = []
+                                for(var i = 0; i < subjectCodes.length; i++){
+                                    codes.push(subjectCodes[i].subjectCode)
+                                }
+                                console.log(codes)
+                                connection.query("SELECT * from Subjects where code IN (?)", [codes], (err, subjects, feilds) => {
+                                    console.log(subjects);
+                                    if(err){
+                                        message['error'] = true;
+                                        message['data'] = 'Error Ocured!';
+                                        res.status(400).json(message);
+                                    }else{
+                                        console.log("success");
+                                        message = JSON.stringify(subjects);
+                                        res.status(200).json(message);
+                                    }
+                                })
+                            }
+                        })
+                    }else{
+                        message['data'] = 'Empty';
+                        res.json(message) ;
+                    }
+                }
+            });
+            connection.release();
+        }
+    });
+}); 
+
+
+
 var multer = require('multer');
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
