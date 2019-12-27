@@ -122,6 +122,34 @@ student.get('/subjects/:studentId', (req, res, next) => {
     });
 }); 
 
+student.get('/subject/:subjectID', (req, res, next) => {
+    var subjectID = req.params.subjectID;
+    console.log(subjectID, "a")
+    var message = {};
+    database.connection.getConnection((err, connection) => {
+        if(err){
+            message['error'] = true;
+            message['data'] = 'Internal Server Error';
+            res.status(500).json(message);
+        }else{
+            // var sql = 'select c.Subject from classes from Classes C left join StudentClasses SC on C.Id = SC.ClassId where SC.studentId = ?' + connection.escape(Id)
+            connection.query('SELECT * from Exam_Schedule e join Subject_ExamSchedule se on e.esID = se.esID where se.SubjectID = ?',[subjectID] ,(err, rows, feilds) => {
+                console.log(rows ,rows.length);
+                if (err) {
+                    message['error'] = true;
+                    message['data'] = 'Error Ocured!';
+                    res.status(400).json(message);
+                }else{
+                    message = JSON.stringify(rows);
+                    res.status(200).json(message);
+                }
+            });
+            connection.release();
+        }
+    });
+}); 
+
+
 
 
 var multer = require('multer');

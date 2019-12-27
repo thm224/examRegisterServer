@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 26, 2019 at 04:36 PM
+-- Generation Time: Dec 27, 2019 at 05:48 PM
 -- Server version: 5.7.28-0ubuntu0.18.04.4
 -- PHP Version: 7.2.24-0ubuntu0.18.04.1
 
@@ -68,7 +68,6 @@ CREATE TABLE `ExamSchedule_Room` (
 --
 
 CREATE TABLE `Exam_Schedule` (
-  `subjectID` int(20) NOT NULL,
   `examID` int(20) NOT NULL,
   `numberSeatsLeft` int(10) NOT NULL,
   `esID` int(20) NOT NULL,
@@ -76,6 +75,13 @@ CREATE TABLE `Exam_Schedule` (
   `endTime` datetime NOT NULL,
   `seatsEachRoomLeft` json NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_vietnamese_ci;
+
+--
+-- Dumping data for table `Exam_Schedule`
+--
+
+INSERT INTO `Exam_Schedule` (`examID`, `numberSeatsLeft`, `esID`, `startTime`, `endTime`, `seatsEachRoomLeft`) VALUES
+(1, 120, 1, '2019-12-18 06:29:13', '2019-12-18 08:00:00', '{\"309-GĐ2\": 30}');
 
 -- --------------------------------------------------------
 
@@ -117,7 +123,8 @@ CREATE TABLE `Students` (
 
 INSERT INTO `Students` (`studentID`, `code`, `name`, `vnumail`, `dateOfBirth`, `gender`) VALUES
 (1, 16020055, 'Trần Hoàng Minh', '16020055@vnu.edu.vn', '', ''),
-(2, 16020033, 'Nguyễn văn', '16020055@vnu.edu.vn', '', '');
+(2, 16020033, 'Nguyễn văn', '16020055@vnu.edu.vn', '', ''),
+(17, 16020059, 'Trần Hoàng Minh', '16020055@vnu.edu.vn', '22-04-1998', 'male');
 
 -- --------------------------------------------------------
 
@@ -183,6 +190,13 @@ CREATE TABLE `Subject_ExamSchedule` (
   `esID` int(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_vietnamese_ci;
 
+--
+-- Dumping data for table `Subject_ExamSchedule`
+--
+
+INSERT INTO `Subject_ExamSchedule` (`subjectID`, `esID`) VALUES
+(1, 1);
+
 -- --------------------------------------------------------
 
 --
@@ -209,7 +223,14 @@ INSERT INTO `Users` (`userID`, `userName`, `passWord`, `role`) VALUES
 (7, '16020099', 'lovemeo34', '0'),
 (8, '16020056', 'lovemeo34', '0'),
 (9, '16020057', 'lovemeo34', '0'),
-(10, 'admin', '1', '1');
+(10, 'admin', '1', '1'),
+(11, '16020060', 'lovemeo34', '0'),
+(12, '16020061', 'lovemeo34', '0'),
+(13, '16020062', 'lovemeo34', '0'),
+(14, '160200672', 'lovemeo34', '0'),
+(15, '1602006172', 'lovemeo34', '0'),
+(16, '1602008172', 'lovemeo34', '0'),
+(17, '165656', 'lovemeo34', '0');
 
 --
 -- Indexes for dumped tables
@@ -309,7 +330,7 @@ ALTER TABLE `Exam`
 -- AUTO_INCREMENT for table `Exam_Schedule`
 --
 ALTER TABLE `Exam_Schedule`
-  MODIFY `esID` int(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `esID` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 --
 -- AUTO_INCREMENT for table `Room`
 --
@@ -319,7 +340,7 @@ ALTER TABLE `Room`
 -- AUTO_INCREMENT for table `Students`
 --
 ALTER TABLE `Students`
-  MODIFY `studentID` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `studentID` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 --
 -- AUTO_INCREMENT for table `Subjects`
 --
@@ -329,7 +350,7 @@ ALTER TABLE `Subjects`
 -- AUTO_INCREMENT for table `Users`
 --
 ALTER TABLE `Users`
-  MODIFY `userID` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `userID` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 --
 -- Constraints for dumped tables
 --
