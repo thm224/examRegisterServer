@@ -182,14 +182,64 @@ student.post('/register', (req, res, next) => {
         }else{
             // var sql = 'select c.Subject from classes from Classes C left join StudentClasses SC on C.Id = SC.ClassId where SC.studentId = ?' + connection.escape(Id)
             connection.query('SELECT * from Exam_Schedule where esID = ?',[esID] ,(err, rows, feilds) => {
-                console.log(rows ,rows.length);
+                console.log(rows);
                 if (err) {
                     message['error'] = true;
                     message['data'] = 'Error Ocured!';
                     res.status(400).json(message);
                 }else{
-                    message = JSON.stringify(rows);
-                    res.status(200).json(message);
+                    var room_registered = "";
+                    var numberSeatsLeft = rows[0].numberSeatsLeft;
+                    seatsEachRoomLeft = rows[0].seatsEachRoomLeft;
+                    seatsEachRoomLeft = JSON.parse(seatsEachRoomLeft);
+                    var keys = Object.keys(seatsEachRoomLeft);
+                    console.log(keys)
+                    for(var i = 0; i < keys.length; i++){
+                        if (seatsEachRoomLeft[keys[i]] > 0){
+                            room_registered = keys[i];
+                            console.log(keys[i])
+                            seatsEachRoomLeft[keys[i]] = seatsEachRoomLeft[keys[i]]-1;
+                            numberSeatsLeft = numberSeatsLeft - 1;
+                            break; 
+                        }else{
+                            continue;
+                        }
+                    }
+                    console.log(seatsEachRoomLeft, numberSeatsLeft)
+                    connection.query("SELECT roomID from Room where name = (?)", [room_registered], (err, roomID) => {
+                        console.log(roomID)
+                        if (err) {
+                            console.log(err)
+                            message['error'] = true;
+                            message['data'] = 'Error Ocured!';
+                            res.status(400).json(message);
+                        }else{
+                            var list_values = [];
+                            list_values.push(studentID, esID, roomID[0].roomID, subjectID)
+                            console.log(list_values)
+                            connection.query("INSERT INTO Student_ExamSchedule (studentId, esID, roomID, subjectID) values (?)", [list_values], (err, results) => {
+                                if (err) {
+                                    console.log(err)
+                                    message['error'] = true;
+                                    message['data'] = 'Error Ocured!';
+                                    res.status(400).json(message);
+                                }else{
+                                    console.log("insert success");
+                                    connection.query("UPDATE Exam_Schedule SET numberSeatsLeft = ?, seatsEachRoomLeft = ? where esID = ?", [numberSeatsLeft, seatsEachRoomLeft, esID], (err, result1) =>{
+                                        if (err) {
+                                            message['error'] = true;
+                                            message['data'] = 'Error Ocured!';
+                                            res.status(400).json(message);
+                                        }else{
+                                            message['data'] = "update success";
+                                            res.status(200).json(message);
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+                    
                 }
             });
             connection.release();
