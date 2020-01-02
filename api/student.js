@@ -8,21 +8,21 @@ student.get('/', (req, res, next) => {
         if (err) {
             message['error'] = true;
             message['data'] = 'Internal Server Error';
-            res.status(500).json(message);
+            return res.status(500).json(message);
         }else{
             connection.query('SELECT * from Students', (err, rows, feilds) => {
                 console.log(rows);
                 if (err) {
                     message['error'] = true;
                     message['data'] = 'Error Ocured!';
-                    res.status(400).json(message);
+                    return res.status(400).json(message);
                 }else{
                     if (rows != 'undefined'){
                         message = JSON.stringify(rows);
-                        res.status(200).json(message);
+                        return res.status(200).json(message);
                     }else{
                         message['data'] = 'Empty';
-                        res.json(message);
+                        return res.json(message);
                     }
                 }
             });
@@ -225,8 +225,10 @@ student.post('/register', (req, res, next) => {
                                     res.status(400).json(message);
                                 }else{
                                     console.log("insert success");
+                                    seatsEachRoomLeft = JSON.stringify(seatsEachRoomLeft)
                                     connection.query("UPDATE Exam_Schedule SET numberSeatsLeft = ?, seatsEachRoomLeft = ? where esID = ?", [numberSeatsLeft, seatsEachRoomLeft, esID], (err, result1) =>{
                                         if (err) {
+                                            console.log(err)
                                             message['error'] = true;
                                             message['data'] = 'Error Ocured!';
                                             res.status(400).json(message);
@@ -419,88 +421,6 @@ student.post('/create', (req, res, next) => {
 //     });
 // }); 
 
-student.put('/', (req, res, next) => {
-    var exceltojson;
-        upload(req,res,function(err){
-            if(err){
-                 res.json({error_code:1,err_desc:err});
-                 return;
-            }
-            if(!req.file){
-                res.json({error_code:1,err_desc:"No file passed"});
-                return;
-            }
-            if(req.file.originalname.split('.')[req.file.originalname.split('.').length-1] === 'xlsx'){
-                exceltojson = xlsxtojson;
-            } else {
-                exceltojson = xlstojson;
-            }
-            try {
-                exceltojson({
-                    input: req.file.path,
-                    output: null, //since we don't need output.json
-                    lowerCaseHeaders:true
-                }, function(err,result){
-                    if(err) {
-                        return res.json({error_code:1,err_desc:err, data: null});
-                    } 
-                    var values = [];
-                    for(var i = 0; i < result.length; i++)
-                        if (result[i].username != '')
-                            values.push([result[i].id, result[i].username, result[i].password, result[i].code, result[i].vnumail, result[i].content, result[i].role, result[i].name]);
-                        else break;
-                    var message = {};
-                    // console.log(values)
-                    database.connection.getConnection((err, connection) => {
-                        if(err){
-                            message['error'] = true;
-                            message['data'] = 'Internal Server Error';
-                            return res.status(500).json(message);
-                        }else{
-                            var Id;
-                            for (var i = 0; i < values.length; i++){
-                                let account = values[i];
-                                var student = [];
-                                student.push(account[0], account[1], account[2], account[6])
-                                console.log(student)
-                                var sql = "UPDATE Users SET userName = ?, password = ?, role = ? where userID = ?"
-                                connection.query(sql,[student[1], student[2], student[3], student[0]] ,(err, rows) => {
-                                    console.log(rows.affectedRows);
-                                    if (err) {
-                                        message['error'] = true;
-                                        message['data'] = 'Update user fail!';
-                                        return res.status(400).json(message);
-                                    }else{
-                                        var student1 = [];
-                                        student1.push(account[3], account[5],account[4],account[6], account[7], account[0]);
-                                        console.log(student1);
-                                        var edit = "UPDATE Students SET Code = ?, Content = ?, Vnumail = ?, Role = ?, Name = ? where Students.Id_Students = ?"
-                                        connection.query(edit,[student1[0], student1[1], student1[2], student1[3], student1[4], student1[5]] ,(err, row) => {
-                                            console.log(Id, row);
-                                            if(err) {
-                                                message['error'] =true;
-                                                message['data'] = 'Update student fail!';
-                                                return res.status(400).json(message);
-                                            }else{
-                                                console.log("Update student success!");
-                                            }
-                                        });
-                                    }
-                            });
-                        }
-                            message['error'] = false;
-                            message['data'] = 'Update student success!';
-                            res.status(200).json(message);
-                            connection.release();
-                        }
-                    });
-                });
-            } catch (e){
-                res.json({error_code:1,err_desc:"Corupted excel file"});
-            }
-        })
-});
-
 student.delete('/:studentId', (req, res, next) => {
     var Id = req.params.studentId;
     var message = {};
@@ -510,21 +430,52 @@ student.delete('/:studentId', (req, res, next) => {
             message['data'] = 'Internal Server Error';
             res.status(500).json(message);
         }else{
-            var sql = "DELETE FROM Students WHERE studentID = ?";
-            connection.query(sql,[Id] ,function (err, result) {
-                if (err) throw err;
-                console.log("Number of records deleted: " + result.affectedRows);
-                var deleteUser = "DELETE FROM Users WHERE userID = ?";
-                connection.query(deleteUser, [Id], (err, result1) => {
-                    if(err){
-                        message['error'] = true;
-                        res.status(400).json(message);
+            connection.query("SELECT code from Students where studentID = ?", [Id], (err, rows) => {
+                if(err){
+                    message['error'] = true;
+                    message['data'] = 'Internal Server Error';
+                    res.status(500).json(message);
+                }else{
+                    console.log(rows)
+                    if (rows.length > 0){
+                        connection.query("DELETE FROM Student_Subject WHERE studentCode = ?", [rows[0].code], (err, rows1) => {
+                            if(err){
+                                message['error'] = true;
+                                res.status(400).json(message);
+                            }else{
+                                console.log("DELETE student_subject success");
+                                connection.query("DELETE FROM Student_ExamSchedule WHERE studentID = ?", [Id], (err, rows1) => {
+                                    if(err){
+                                        message['error'] = true;
+                                        res.status(400).json(message);
+                                    }else{
+                                        console.log("DELETE Student_ExamSchedule success");
+                                        var sql = "DELETE FROM Students WHERE studentID = ?";
+                                        connection.query(sql,[Id] ,function (err, result) {
+                                            if (err) throw err;
+                                            console.log("Number of records deleted: " + result.affectedRows);
+                                            var deleteUser = "DELETE FROM Users WHERE userID = ?";
+                                            connection.query(deleteUser, [Id], (err, result1) => {
+                                                if(err){
+                                                    message['error'] = true;
+                                                    res.status(400).json(message);
+                                                    }else{
+                                                        console.log(result1,"delete student success");
+                                                        message['data'] = "delete student success";
+                                                        res.status(200).json(message);
+                                                    }
+                                                });
+                                            });
+                                    }
+                                });
+                            }
+                        })
                     }else{
-                        console.log(result1,"delete student success");
-                        message['data'] = "delete student success";
-                        res.status(200).json(message);
+                        message['error'] = true;
+                        message['data'] = "Student is not exist!";
+                        res.status(400).json(message);
                     }
-                });
+                }
             });
             connection.release();
         }

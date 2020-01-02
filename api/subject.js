@@ -32,28 +32,30 @@ subject.get('/', (req, res, next) => {
     });
 });
 
-subject.get('/:studentID', (req, res, next) => {
-    var Id = req.params.studentID;
+subject.get('/:subjectID', (req, res, next) => {
+    var Id = req.params.subjectID;
     var message = {};
     database.connection.getConnection((err, connection) => {
         if(err){
             message['error'] = true;
             message['data'] = 'Internal Server Error';
-            res.status(500).json(message);
+            return res.status(500).json(message);
         }else{
-            connection.query('select * from Subjects s join Student_Subject ss on s.subjectID = ss.subjectID where ss.studentId = ?',[Id] ,(err, rows, feilds) => {
-                console.log(rows);
+            connection.query('select * from Subjects where subjectID = ?',[Id] ,(err, rows, feilds) => {
+                console.log(rows.length);
                 if (err) {
+                    console.log(err)
                     message['error'] = true;
                     message['data'] = 'Error Ocured!';
-                    res.status(400).json(message);
+                    return res.status(400).json(message);
                 }else{
-                    if (rows.lenght > 0){
+                    if (rows.length > 0){
+                        console.log(rows)
                         message = JSON.stringify(rows);
-                        res.status(200).json(message);
+                        return res.status(200).json(message);
                     }else{
                         message['data'] = 'Empty';
-                        res.json(message) ;
+                        return res.json(message) ;
                     }
                 }
             });
@@ -63,7 +65,10 @@ subject.get('/:studentID', (req, res, next) => {
 }); 
 
 subject.post('/create', (req, res, next) => {
-    var Id = req.params.studentID;
+    var name = req.body.name;
+    var code = req.body.code;
+    var lecturer = req.body.lecturer;
+    var credits = req.body.credits;
     var message = {};
     database.connection.getConnection((err, connection) => {
         if(err){
@@ -71,19 +76,36 @@ subject.post('/create', (req, res, next) => {
             message['data'] = 'Internal Server Error';
             res.status(500).json(message);
         }else{
-            connection.query('select * from Subjects s join Student_Subject ss on s.subjectID = ss.subjectID where ss.studentId = ?',[Id] ,(err, rows, feilds) => {
-                console.log(rows);
-                if (err) {
+            var checkExist = "SELECT code from Subjects where code = ?";
+            console.log(name,code)
+            connection.query(checkExist, [code], (err, results) => {
+                if(err){
                     message['error'] = true;
-                    message['data'] = 'Error Ocured!';
-                    res.status(400).json(message);
+                    message['data'] = "Internal Server Error";
+                    console.log(err);
+                    return res.status(400).json(message);
                 }else{
-                    if (rows.lenght > 0){
-                        message = JSON.stringify(rows);
-                        res.status(200).json(message);
+                    console.log(results)
+                    if (results.length > 0){
+                        message['error'] = true;
+                        message['data'] = "Subject is already exist!";
+                        return res.status(400).json(message);
                     }else{
-                        message['data'] = 'Empty';
-                        res.json(message) ;
+                        var insert = "INSERT INTO Subjects (name, code, lecturer, credits) VALUES (?)";
+                        var subjects = []
+                        subjects.push(name, code, lecturer, credits)
+                        connection.query(insert, [subjects], (err, rows) =>{
+                            if(err){
+                                message['error'] = true;
+                                message['data'] = "Insert subject fail!";
+                                console.log(err);
+                                return res.status(400).json(message);
+                            }else{
+                                message['error'] = false;
+                                message['data'] = "Insert subject success";
+                                return res.status(200).json(message);
+                            }
+                        });
                     }
                 }
             });
@@ -156,22 +178,26 @@ subject.post('/upload_students', (req, res, next) => {
                             message['error'] = true;
                             message['data'] = 'Internal Server Error';
                             res.status(500).json(message);
-                        }else{                        
-                            var sql = "INSERT INTO Student_Subject (subjectCode, studentCode, can_join_exam) VALUES (?)";
-                            connection.query(sql, values, (err, rowss) => {
-                                if(err){
-                                    console.log(err)
-                                    message['error'] = true;
-                                    message['data'] = 'error occur!';
-                                    return res.status(400).json(message);
-                                }else{
-                                    message['error'] = false;
-                                    message['data'] = "Upload success";
-                                    res.status(200).json(message);
-                                    connection.release();
-                                }
-                            });
+                        }else{
+                            for (var i = 0; i < values.length; i++){
+                                console.log(values[i])                        
+                                var sql = "INSERT INTO Student_Subject (subjectCode, studentCode, can_join_exam) VALUES (?)";
+                                connection.query(sql, [values[i]], (err, rowss) => {
+                                    if(err){
+                                        console.log(err)
+                                        message['error'] = true;
+                                        message['data'] = 'error occur!';
+                                        return res.status(400).json(message);
+                                    }else{
+                                        console.log("Insert students success!");
+                                    }
+                                });
 
+                            }
+                            message['error'] = false;
+                            message['data'] = "Upload success";
+                            res.status(200).json(message);
+                            connection.release();
                         }
                     });
                 });

@@ -52,19 +52,21 @@ exam_schedule.post('/create', (req, res, next) => {
                                         list_room_es.push([esID, rows[i].roomID]);
                                     }
                                     console.log(list_room_es,"success1");
-                                    connection.query("INSERT INTO ExamSchedule_Room (esID, roomID) VALUES (?)", list_room_es, (err, result2) =>{
-                                        if (err) {
-                                            console.log(err)
-                                            message['error'] = true;
-                                            message['data'] = 'Error Ocured!';
-                                            res.status(400).json(message);
-                                        }else{
-                                            console.log("success2", result2)
-                                            message['error'] = false;
-                                            message['data'] = 'Insert success!';
-                                            res.status(200).json(message);
-                                        }
-                                    })
+                                    for(var j = 0; j < list_room_es.length; j++){
+                                        connection.query("INSERT INTO ExamSchedule_Room (esID, roomID) VALUES (?)", [list_room_es[j]], (err, result2) =>{
+                                            if (err) {
+                                                console.log(err)
+                                                message['error'] = true;
+                                                message['data'] = 'Error Ocured!';
+                                                res.status(400).json(message);
+                                            }else{
+                                                console.log("success2", result2)
+                                            }
+                                        });
+                                    }
+                                    message['error'] = false;
+                                    message['data'] = 'Insert success!';
+                                    res.status(200).json(message);
                                 }
                             })
 
